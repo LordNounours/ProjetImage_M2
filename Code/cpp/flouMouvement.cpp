@@ -4,9 +4,9 @@
 #include <cmath>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h" 
+#include "../lib/stb_image.h" 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "../lib/stb_image_write.h"
 using namespace std;
 
 void generateMotionBlurKernel(vector<vector<float>>& kernel, int length, int direction) {
