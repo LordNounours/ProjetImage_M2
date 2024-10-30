@@ -45,8 +45,8 @@ int main(int argc, char* argv[]) {
     sscanf(argv[3], "%f", &amplitude);
     sscanf(argv[4], "%f", &frequency);
     sscanf(argv[5], "%d", &x_start);
-    sscanf(argv[6], "%d", &x_end);
-    sscanf(argv[7], "%d", &y_start);
+    sscanf(argv[6], "%d", &y_start);
+    sscanf(argv[7], "%d", &x_end);
     sscanf(argv[8], "%d", &y_end);
 
     unsigned char *ImgIn, *ImgOut;
