@@ -29,7 +29,10 @@ void floupixelzone(unsigned char *ImgIn , unsigned char *ImgOut, int nH , int nW
                 int colpixelB = 0;
                 int Y = 0;
                 if (mode == 1)//MIN
+                {
                     Y = std::numeric_limits<int>::max();
+                    colpixelR = colpixelV = colpixelB = std::numeric_limits<int>::max();
+                }
                 
                 for (int k = i ; k < i + pas ; k++)
                 {
