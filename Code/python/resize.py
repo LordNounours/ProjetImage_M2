@@ -23,8 +23,8 @@ def resize_images(input_folder, output_folder, size):
                 print(f"Erreur lors du traitement de l'image {filename}: {e}")
 
 
-input_folder = '../Data/Data/train/gauss3/'  
-output_folder = '../Data/Data/train/gauss3/' 
-size = (224, 224)  
+input_folder = 'archive'  
+output_folder = 'archive' 
+size = (128, 128)  
 
 resize_images(input_folder, output_folder, size)

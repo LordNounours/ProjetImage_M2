@@ -14,7 +14,7 @@ def apply_gaussian_blur(input_folder, output_folder, k, sigma, x_start, y_start,
             input_path = os.path.join(input_folder, file)
             output_path = os.path.join(output_folder, file)
             command = [
-                './../bin/flougaussienzone', 
+                'Code/bin/flougaussienzone', 
                 input_path,
                 output_path,
                 str(k),
@@ -31,14 +31,14 @@ def apply_gaussian_blur(input_folder, output_folder, k, sigma, x_start, y_start,
                 print(f"Failed to process {file}: {e}")
 
 if __name__ == "__main__":
-    input_folder = '../Data/Data/train/clear/'  # Changez par le chemin de votre dossier d'entrée
-    output_folder = '../Data/Data/train/gauss1/'
-    k = 23  
-    sigma = 10  
-    x_start = 81  
-    y_start = 97  
-    x_end = 424  
-    y_end = 467 
+    input_folder = 'archive'  # Changez par le chemin de votre dossier d'entrée
+    output_folder = 'gauss3/'
+    k = 29  
+    sigma = 60
+    x_start = 5  
+    y_start = 30
+    x_end = 120  
+    y_end = 110 
 
-    apply_motion_blur(input_folder, output_folder, k, sigma, x_start, y_start, x_end, y_end)
+    apply_gaussian_blur(input_folder, output_folder, k, sigma, x_start, y_start, x_end, y_end)
     print("Traitement terminé.")

@@ -14,7 +14,7 @@ def apply_distorsion(input_folder, output_folder, amplitude, frequence, x_start,
             input_path = os.path.join(input_folder, file)
             output_path = os.path.join(output_folder, file)
             command = [
-                './../bin/distorsionzone',  # exe
+                'Code/bin/distorsionzone',  # exe
                 input_path,
                 output_path,
                 str(amplitude),
@@ -31,14 +31,14 @@ def apply_distorsion(input_folder, output_folder, amplitude, frequence, x_start,
                 print(f"Failed to process {file}: {e}")
 
 if __name__ == "__main__":
-    input_folder = '../Data/Data/train/clear/'  
-    output_folder = '../Data/Data/train/distorsion1/'
-    amplitude = 80   
-    frequence = 20 
-    x_start = 81  
-    y_start = 97  
-    x_end = 424  
-    y_end = 467  
+    input_folder = 'archive/'  
+    output_folder = 'distorsion3/'
+    amplitude = 10   
+    frequence = 5
+    x_start = 5  
+    y_start = 30
+    x_end = 120  
+    y_end = 110  
 
     apply_distorsion(input_folder, output_folder, amplitude, frequence, x_start, y_start, x_end, y_end)
     print("Traitement terminé.")

@@ -14,7 +14,7 @@ def apply_motion_blur(input_folder, output_folder, length, direction, x_start, y
             input_path = os.path.join(input_folder, file)
             output_path = os.path.join(output_folder, file)
             command = [
-                './../bin/floumouvementzone', 
+                'Code/bin/floumouvementzone', 
                 input_path,
                 output_path,
                 str(length),
@@ -31,14 +31,14 @@ def apply_motion_blur(input_folder, output_folder, length, direction, x_start, y
                 print(f"Failed to process {file}: {e}")
 
 if __name__ == "__main__":
-    input_folder = '../Data/Data/train/clear/'  # Changez par le chemin de votre dossier d'entrée
-    output_folder = '../Data/Data/train/mvt1/'
-    length = 17  
+    input_folder = 'archive'  # Changez par le chemin de votre dossier d'entrée
+    output_folder = 'mvt2/'
+    length = 21  
     direction = 1  # 0 pour horizontal, 1 pour vertical
-    x_start = 81  
-    y_start = 97  
-    x_end = 424  
-    y_end = 467  
+    x_start = 5  
+    y_start = 30
+    x_end = 120  
+    y_end = 110 
 
     apply_motion_blur(input_folder, output_folder, length, direction, x_start, y_start, x_end, y_end)
     print("Traitement terminé.")

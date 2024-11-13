@@ -14,7 +14,7 @@ def apply_pixel(input_folder, output_folder, taille, mode, x_start, y_start, x_e
             input_path = os.path.join(input_folder, file)
             output_path = os.path.join(output_folder, file)
             command = [
-                './../bin/floupixelzone',  #exe
+                'Code/bin/floupixelzone',  #exe
                 input_path,
                 output_path,
                 str(taille),
@@ -31,14 +31,14 @@ def apply_pixel(input_folder, output_folder, taille, mode, x_start, y_start, x_e
                 print(f"Failed to process {file}: {e}")
 
 if __name__ == "__main__":
-    input_folder = '../Data/Data/train/clear/'  
-    output_folder = '../Data/Data/train/pixel1/'
-    taille = 1000  
+    input_folder = 'archive/'
+    output_folder = 'pixel3/'
+    taille = 400 
     mode = 1  #0 moyen, 1 min , 2 max
-    x_start = 81  
-    y_start = 97  
-    x_end = 424  
-    y_end = 467  
+    x_start = 5  
+    y_start = 30
+    x_end = 120  
+    y_end = 110  
 
     apply_pixel(input_folder, output_folder, taille, mode, x_start, y_start, x_end, y_end)
     print("Traitement terminé.")
