@@ -11,3 +11,6 @@ mvt 3 : l 41
 pixel 1 : t 4
 pixel 2 : t 64
 pixel 3 : t 400
+pixel mut 1 : t 4
+pixel mut 2 : t 64
+pixel mut 3 : t 400
