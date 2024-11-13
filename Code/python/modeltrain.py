@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
+tf.config.set_visible_devices([], 'GPU')
+
 clear_dir = '../Data/Data/train/clear/'
 train_dir = '../Data/Data/train/distorsion1/'
 
