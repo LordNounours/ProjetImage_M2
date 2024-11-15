@@ -121,10 +121,8 @@ void floupixelzone(unsigned char *ImgIn , unsigned char *ImgOut, int nH , int nW
         }
         
     }
-    
-    
-    
 }
+
 
 
 int main(int argc, char* argv[])
