@@ -31,12 +31,11 @@ void distortion(unsigned char *ImgIn, unsigned char *ImgOut, int nH, int nW, flo
 
 int main(int argc, char* argv[]) {
     char cNomImgLue[250], cNomImgOut[250];
-    int nH, nW, nTaille,x_start,x_end,y_start,y_end;
+    int nH, nW, nTaille, x_start, x_end, y_start, y_end;
     float amplitude, frequency;
-    bool useBlur = true;
 
     if (argc < 9) {
-        printf("Usage: ImageIn.png ImgOut.png  amplitude frequency \n");
+        printf("Usage: ImageIn.png ImgOut.png amplitude frequency x_start y_start x_end y_end \n");
         exit(1);
     }
 
@@ -53,16 +52,14 @@ int main(int argc, char* argv[]) {
     int channels;
     ImgIn = stbi_load(cNomImgLue, &nW, &nH, &channels, STBI_rgb);
     if (ImgIn == NULL) {
-        std::cerr << "Erreur lors du chargement des images." << std::endl;
+        std::cerr << "Erreur lors du chargement de l'image." << std::endl;
         return 1;
     }
     nTaille = nH * nW;
     ImgOut = (unsigned char *)malloc(3 * nTaille * sizeof(unsigned char));
     memset(ImgOut, 0, 3 * nTaille * sizeof(unsigned char));
 
-   
-    distortion(ImgIn, ImgOut, nH, nW, amplitude, frequency,x_start,y_start,x_end,y_end);
-    
+    distortion(ImgIn, ImgOut, nH, nW, amplitude, frequency, x_start, y_start, x_end, y_end);
 
     if (!stbi_write_png(cNomImgOut, nW, nH, 3, ImgOut, nW * 3)) {
         std::cerr << "Erreur lors de l'enregistrement de l'image." << std::endl;
