@@ -36,6 +36,10 @@ def charger_image():
         try:
             # Charger l'image avec OpenCV
             img = cv2.imread(chemin_fichier)
+            if img is None:
+                print("Erreur : impossible de charger l'image.")
+                return
+
             img_original = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Sauvegarder l'image originale pour référence
             
             # Convertir en Image PIL
@@ -118,6 +122,9 @@ def ouvrir_panel_obscuration():
     btn_mouvement = tk.Button(panel_obscuration, text="Flou de Mouvement", command=lambda: ouvrir_parametres_obscuration("../bin/floumouvement"))
     btn_mouvement.pack(pady=5)
 
+    btn_fgsm = tk.Button(panel_obscuration, text="FGSM", command=lambda: ouvrir_parametres_obscuration("../bin/fgsm"))
+    btn_fgsm.pack(pady=5)
+
 # Créer un dossier "temp/" s'il n'existe pas
 def creer_dossier_temp():
     if not os.path.exists("./temp"):
@@ -135,21 +142,26 @@ def appliquer_obscuration(type_filtre):
     chemin_sortie2 = "./temp/image_modifiee2.png"
 
     # Vérifier s'il y a une sélection
-    if x_start is None or x_end is None or y_start is None or y_end is None:
+    if None in [x_start, x_end, y_start, y_end]:
         # Si aucune sélection, appliquer le filtre sur toute l'image
         if type_filtre == "distorsion":
             result = subprocess.run([f"{type_filtre}", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b)])
+        elif type_filtre == "fgsm":
+            result = subprocess.run([f"{type_filtre}", chemin_image, chemin_sortie, str(a)])
         else:
             result = subprocess.run([f"{type_filtre}", chemin_image, chemin_sortie, str(a), str(b)])
-     
     else:
         # Si une zone est sélectionnée, appliquer le filtre uniquement sur cette zone
         if type_filtre == "distorsion":
             result = subprocess.run([f"{type_filtre}zone", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b),
                             str(x_start), str(y_start), str(x_end), str(y_end)])
-        else :
+        elif type_filtre == "fgsm":
+            result = subprocess.run([f"{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(x_start), str(y_start), str(x_end), str(y_end)])
+        else:
             result = subprocess.run([f"{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(b),
                             str(x_start), str(y_start), str(x_end), str(y_end)])
+
+    # Vérification de l'exécution du subprocess
     if result.returncode != 0:
         print(f"Erreur lors de l'exécution : {result.stderr}")
     else:
@@ -162,6 +174,10 @@ def appliquer_obscuration(type_filtre):
     # Afficher l'image modifiée sur le canvas
     canvas.create_image(0, 0, anchor="nw", image=photo)
     canvas.image = photo
+    x_start = None
+    y_start = None
+    x_end = None
+    y_end = None
 
 # Fonction pour gérer la sélection de la zone
 def on_button_press(event):
@@ -173,46 +189,42 @@ def on_button_press(event):
     if rect_id:
         canvas.delete(rect_id)
     
-    # Créer un rectangle temporaire à partir du point de départ
+    # Créer un rectangle transparent pour la sélection
     rect_id = canvas.create_rectangle(x_start, y_start, x_start, y_start, outline="red", width=2)
 
-# Fonction appelée lorsque le bouton gauche est relâché pour enregistrer le point de fin et afficher le rectangle
 def on_mouse_drag(event):
-    global x_start, y_start, x_end, y_end, rect_id
+    global x_end, y_end, rect_id
     x_end, y_end = event.x, event.y
+    print(f"Point de fin : ({x_end}, {y_end})")
     
-    # Mettre à jour les dimensions du rectangle pendant le drag
+    # Mettre à jour la position du rectangle pendant le déplacement de la souris
     canvas.coords(rect_id, x_start, y_start, x_end, y_end)
 
-# Fonction appelée lorsque le bouton gauche est relâché pour enregistrer le point de fin
 def on_button_release(event):
     global x_end, y_end
     x_end, y_end = event.x, event.y
-    print(f"Point de fin : ({x_end}, {y_end})")
-    print(f"Zone sélectionnée : x_start={x_start}, x_end={x_end}, y_start={y_start}, y_end={y_end}")
+    print(f"Sélection terminée : ({x_start}, {y_start}) à ({x_end}, {y_end})")
 
-# Créer la fenêtre principale
+# Créer la fenêtre principale Tkinter
 fenetre = tk.Tk()
-fenetre.title("Afficheur d'image avec sélection de zone")
+fenetre.title("Éditeur d'image")
 
-# Ajouter un bouton pour charger une image
+# Créer un canvas pour afficher l'image
+canvas = tk.Canvas(fenetre)
+canvas.pack(fill="both", expand=True)
+
+# Créer un bouton pour charger l'image
 btn_charger = tk.Button(fenetre, text="Charger une image", command=charger_image)
 btn_charger.pack(pady=10)
 
-# Ajouter un bouton pour ouvrir le panel d'obscuration
-btn_obscuration = tk.Button(fenetre, text="Obscuration", command=ouvrir_panel_obscuration)
+# Créer un bouton pour ouvrir le panel de filtres
+btn_obscuration = tk.Button(fenetre, text="Appliquer un filtre", command=ouvrir_panel_obscuration)
 btn_obscuration.pack(pady=10)
 
-# Ajouter un canvas pour afficher l'image
-canvas = tk.Canvas(fenetre, bg="white")
-canvas.pack()
+# Lier les événements de la souris pour la sélection de la zone
+canvas.bind("<ButtonPress-1>", on_button_press)
+canvas.bind("<B1-Motion>", on_mouse_drag)
+canvas.bind("<ButtonRelease-1>", on_button_release)
 
-# Associer les événements de la souris au canvas
-canvas.bind("<ButtonPress-1>", on_button_press)  # Début du clic gauche
-canvas.bind("<B1-Motion>", on_mouse_drag)  # Déplacement de la souris pendant le clic gauche
-canvas.bind("<ButtonRelease-1>", on_button_release)  # Fin du clic gauche
-
-# Lancer l'application
+# Lancer la fenêtre Tkinter
 fenetre.mainloop()
-
-

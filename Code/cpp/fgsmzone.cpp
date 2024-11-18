@@ -9,7 +9,7 @@
 #include "../lib/stb_image_write.h"
 using namespace std;
 
-void FGSM(unsigned char *ImgIn, unsigned char *ImgOut, int nH, int nW, float epsilon, int x_start, int y_start, int x_end, int y_end) {
+void FGSM(unsigned char *ImgIn, unsigned char *ImgOut, int nH, int nW, int epsilon, int x_start, int y_start, int x_end, int y_end) {
     for (int y = 0; y < nH; ++y) {
         for (int x = 0; x < nW; ++x) {
             if (x >= x_start && x < x_end && y >= y_start && y < y_end) {
@@ -32,7 +32,7 @@ void FGSM(unsigned char *ImgIn, unsigned char *ImgOut, int nH, int nW, float eps
 int main(int argc, char* argv[]) {
     char cNomImgLue[250], cNomImgOut[250];
     int nH, nW, nTaille, x_start, y_start, x_end, y_end;
-    float epsilon;
+    int epsilon;
 
     if (argc < 8) {
         printf("Usage: ImageIn.png ImgOut.png epsilon x_start y_start x_end y_end \n");
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 
     sscanf(argv[1], "%s", cNomImgLue);
     sscanf(argv[2], "%s", cNomImgOut);
-    sscanf(argv[3], "%f", &epsilon);
+    sscanf(argv[3], "%d", &epsilon);
     sscanf(argv[4], "%d", &x_start);
     sscanf(argv[5], "%d", &y_start);
     sscanf(argv[6], "%d", &x_end);
