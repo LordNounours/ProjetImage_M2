@@ -4,6 +4,10 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import Toplevel
 from PIL import Image, ImageTk
+from tkinter import messagebox
+import tensorflow as tf  # Nécessaire pour charger le modèle .keras
+import numpy as np
+
 import cv2
 
 # Variables globales pour stocker les coordonnées, la référence du rectangle, et le chemin de l'image
@@ -14,6 +18,68 @@ photo = None  # Image Tkinter
 img_original = None  # Image originale
 chemin_image = None  # Chemin de l'image sélectionnée
 a, b = None, None  # Paramètres a et b
+modele = None
+
+
+def faire_prediction():
+    global modele, chemin_image
+
+    if modele is None:
+        print("Aucun modèle chargé. Veuillez charger un modèle avant de faire une prédiction.")
+        messagebox.showwarning("Attention", "Aucun modèle chargé. Veuillez charger un modèle avant de faire une prédiction.")
+        return
+    
+    if chemin_image is None:
+        print("Aucune image disponible pour la prédiction.")
+        messagebox.showwarning("Attention", "Aucune image disponible pour la prédiction.")
+        return
+    
+    try:
+        # Charger l'image modifiée avec OpenCV
+        img = cv2.imread(chemin_image)
+        if img is None:
+            print("Erreur : impossible de charger l'image modifiée pour la prédiction.")
+            return
+        
+        # Prétraitement de l'image pour le modèle
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Convertir en RGB
+        img = cv2.resize(img, (128, 128))  # Redimensionner pour correspondre à l'entrée du modèle (ajustez selon votre modèle)
+        img = img / 255.0  # Normaliser les pixels entre 0 et 1
+        img = img[np.newaxis, ...]  # Ajouter une dimension pour correspondre au batch
+        
+        # Faire une prédiction avec le modèle
+        predictions = modele.predict(img)
+        print(f"Prédictions : {predictions}")
+        messagebox.showinfo("Prédictions", f"Résultats de la prédiction : {predictions}")
+    except Exception as e:
+        print(f"Erreur lors de la prédiction : {e}")
+        messagebox.showerror("Erreur", f"Erreur lors de la prédiction : {e}")
+
+
+
+def charger_modele():
+    global modele  # Utiliser une variable globale pour stocker le modèle
+    try:
+        # Ouvrir une boîte de dialogue pour sélectionner un fichier .keras
+        chemin_modele = filedialog.askopenfilename(
+            title="Choisir un modèle",
+            initialdir="../modeles",  # Répertoire de départ
+            filetypes=[("Fichiers Keras", "*.keras"), ("Tous les fichiers", "*.*")]
+        )
+        
+        if chemin_modele:  # Si un fichier est sélectionné
+            # Charger le modèle avec TensorFlow/Keras
+            modele = tf.keras.models.load_model(chemin_modele)
+            print(f"Modèle chargé avec succès depuis : {chemin_modele}")
+            messagebox.showinfo("Succès", f"Modèle chargé avec succès depuis : {chemin_modele}")
+        else:
+            print("Aucun fichier sélectionné.")
+    except Exception as e:
+        print(f"Erreur lors du chargement du modèle : {e}")
+        messagebox.showerror("Erreur", f"Erreur lors du chargement du modèle : {e}")
+
+
+
 
 # Fonction pour charger l'image
 def charger_image():
@@ -61,7 +127,10 @@ def charger_image():
             canvas.create_image(0, 0, anchor="nw", image=photo)
         except Exception as e:
             print(f"Erreur lors du chargement de l'image : {e}")
-
+    else:
+        messagebox.showerror("Erreur", f"Erreur lors du chargement de l'image : {e}")
+        charger_image()
+        
 def ouvrir_parametres_obscuration(type_filtre  , panel_obscuration):
     panel_obscuration.destroy()
 
@@ -180,6 +249,13 @@ def appliquer_obscuration(type_filtre):
     # Afficher l'image modifiée sur le canvas
     canvas.create_image(0, 0, anchor="nw", image=photo)
     canvas.image = photo
+    
+    
+    if modele:
+        faire_prediction()
+    else:
+        messagebox.showwarning("Attention", "Aucune modèle de prediction est chargé.")
+    
     a = None
     b = None
     x_start = None
@@ -231,6 +307,11 @@ btn_charger.pack(pady=10)
 # Créer un bouton pour ouvrir le panel de filtres
 btn_obscuration = tk.Button(fenetre, text="Appliquer un filtre", command=ouvrir_panel_obscuration)
 btn_obscuration.pack(pady=10)
+
+
+# Ajouter un bouton pour charger un modèle
+btn_charger_modele = tk.Button(fenetre, text="Charger un modèle keras", command=charger_modele)
+btn_charger_modele.pack(pady=10)
 
 # Lier les événements de la souris pour la sélection de la zone
 canvas.bind("<ButtonPress-1>", on_button_press)
