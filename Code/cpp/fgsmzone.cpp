@@ -9,16 +9,47 @@
 #include "../lib/stb_image_write.h"
 using namespace std;
 
+const int sobel_x[3][3] = {
+    {-1, 0, 1},
+    {-2, 0, 2},
+    {-1, 0, 1}
+};
+
+const int sobel_y[3][3] = {
+    {-1, -2, -1},
+    { 0,  0,  0},
+    { 1,  2,  1}
+};
+
+int calculateSobelGradient(const unsigned char* ImgIn, int nW, int nH, int x, int y, int channel, const int filter[3][3]) {
+    int gradient = 0;
+    for (int ky = -1; ky <= 1; ++ky) {
+        for (int kx = -1; kx <= 1; ++kx) {
+            int px = std::min(std::max(x + kx, 0), nW - 1);
+            int py = std::min(std::max(y + ky, 0), nH - 1);
+            gradient += ImgIn[(py * nW + px) * 3 + channel] * filter[ky + 1][kx + 1];
+        }
+    }
+    return gradient;
+}
+
 void FGSM(unsigned char *ImgIn, unsigned char *ImgOut, int nH, int nW, int epsilon, int x_start, int y_start, int x_end, int y_end) {
     for (int y = 0; y < nH; ++y) {
         for (int x = 0; x < nW; ++x) {
             if (x >= x_start && x < x_end && y >= y_start && y < y_end) {
                 for (int c = 0; c < 3; ++c) {
-                    int pixel_val = ImgIn[(y * nW + x) * 3 + c];
-                    int gradient = pixel_val - 128;
-                    int perturbed_value = pixel_val - epsilon * gradient / abs(gradient);
-                    perturbed_value = std::min(std::max(perturbed_value, 0), 255);
-                    ImgOut[(y * nW + x) * 3 + c] = perturbed_value;
+                    int gradient_x = calculateSobelGradient(ImgIn, nW, nH, x, y, c, sobel_x);
+                    int gradient_y = calculateSobelGradient(ImgIn, nW, nH, x, y, c, sobel_y);
+                    int gradient = std::sqrt(gradient_x * gradient_x + gradient_y * gradient_y);
+
+                    if (gradient != 0) {
+                        int sign = gradient > 0 ? 1 : -1;
+                        int perturbed_value = ImgIn[(y * nW + x) * 3 + c] + epsilon * sign;
+                        perturbed_value = std::min(std::max(perturbed_value, 0), 255);
+                        ImgOut[(y * nW + x) * 3 + c] = perturbed_value;
+                    } else {
+                        ImgOut[(y * nW + x) * 3 + c] = ImgIn[(y * nW + x) * 3 + c];
+                    }
                 }
             } else {
                 ImgOut[(y * nW + x) * 3] = ImgIn[(y * nW + x) * 3];
