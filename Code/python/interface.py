@@ -17,8 +17,10 @@ a, b = None, None  # Paramètres a et b
 
 # Fonction pour charger l'image
 def charger_image():
-    global photo, img_original, rect_id, chemin_image  # Utiliser les variables globales
+    
 
+    global photo, img_original, rect_id, chemin_image  # Utiliser les variables globales
+    chemin_image = None
     # Ouvrir une boîte de dialogue pour sélectionner un fichier image
     chemin_fichier = filedialog.askopenfilename(
         title="Choisir une image",
@@ -60,9 +62,9 @@ def charger_image():
         except Exception as e:
             print(f"Erreur lors du chargement de l'image : {e}")
 
-def ouvrir_parametres_obscuration(type_filtre):
-    global a, b  # Utiliser les variables globales pour a et b
-    
+def ouvrir_parametres_obscuration(type_filtre  , panel_obscuration):
+    panel_obscuration.destroy()
+
     # Créer une nouvelle fenêtre pour saisir les paramètres a et b
     fenetre_parametres = Toplevel(fenetre)
     fenetre_parametres.title(f"Paramètres pour {type_filtre}")
@@ -99,6 +101,7 @@ def ouvrir_parametres_obscuration(type_filtre):
     # Bouton pour appliquer avec les paramètres
     btn_appliquer = tk.Button(fenetre_parametres, text="Appliquer", command=appliquer_avec_parametres)
     btn_appliquer.pack(pady=10)
+    
 
     # S'assurer que la fenêtre de paramètres prend suffisamment de place pour tout afficher
     fenetre_parametres.geometry("300x200")  # Taille minimale de la fenêtre
@@ -110,19 +113,19 @@ def ouvrir_panel_obscuration():
     panel_obscuration.title("Obscuration de l'image")
 
     # Ajouter les boutons pour chaque effet
-    btn_pixelisation = tk.Button(panel_obscuration, text="Pixelisation", command=lambda: ouvrir_parametres_obscuration("../bin/floupixel"))
+    btn_pixelisation = tk.Button(panel_obscuration, text="Pixelisation", command=lambda: ouvrir_parametres_obscuration("floupixel" , panel_obscuration))
     btn_pixelisation.pack(pady=5)
 
-    btn_distorsion = tk.Button(panel_obscuration, text="Distorsion", command=lambda: ouvrir_parametres_obscuration("../bin/distorsion"))
+    btn_distorsion = tk.Button(panel_obscuration, text="Distorsion", command=lambda: ouvrir_parametres_obscuration("distorsion" , panel_obscuration))
     btn_distorsion.pack(pady=5)
 
-    btn_gaussien = tk.Button(panel_obscuration, text="Flou Gaussien", command=lambda: ouvrir_parametres_obscuration("../bin/flougaussien"))
+    btn_gaussien = tk.Button(panel_obscuration, text="Flou Gaussien", command=lambda: ouvrir_parametres_obscuration("flougaussien", panel_obscuration))
     btn_gaussien.pack(pady=5)
 
-    btn_mouvement = tk.Button(panel_obscuration, text="Flou de Mouvement", command=lambda: ouvrir_parametres_obscuration("../bin/floumouvement"))
+    btn_mouvement = tk.Button(panel_obscuration, text="Flou de Mouvement", command=lambda: ouvrir_parametres_obscuration("floumouvement", panel_obscuration))
     btn_mouvement.pack(pady=5)
 
-    btn_fgsm = tk.Button(panel_obscuration, text="FGSM", command=lambda: ouvrir_parametres_obscuration("../bin/fgsm"))
+    btn_fgsm = tk.Button(panel_obscuration, text="FGSM", command=lambda: ouvrir_parametres_obscuration("fgsm" , panel_obscuration))
     btn_fgsm.pack(pady=5)
 
 # Créer un dossier "temp/" s'il n'existe pas
@@ -135,31 +138,33 @@ def appliquer_obscuration(type_filtre):
     global photo, img_original, x_start, y_start, x_end, y_end, chemin_image, a, b , result
 
     # Créer le dossier temp s'il n'existe pas
-    creer_dossier_temp()
+    temp = creer_dossier_temp()
 
     # Définir le chemin de l'image de sortie
     chemin_sortie = "./temp/image_modifiee.png"
     chemin_sortie2 = "./temp/image_modifiee2.png"
-
+        
+        
+    print(f"chemin_image : {chemin_image}, chemin_sortie :{chemin_sortie}\n, a: {a}, b: {b}, x_start: {x_start}, y_start: {y_start}, x_end: {x_end}, y_end: {y_end}\n")
+    print(f"appilcation du fitre\n")
+    
     # Vérifier s'il y a une sélection
     if None in [x_start, x_end, y_start, y_end]:
         # Si aucune sélection, appliquer le filtre sur toute l'image
         if type_filtre == "distorsion":
-            result = subprocess.run([f"{type_filtre}", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b)])
-        elif type_filtre == "fgsm":
-            result = subprocess.run([f"{type_filtre}", chemin_image, chemin_sortie, str(a)])
+            result = subprocess.run([f"../bin/{type_filtre}", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b)])
+        if type_filtre == "fgsm":
+            result = subprocess.run([f"../bin/{type_filtre}", chemin_image, chemin_sortie, str(a)])
         else:
-            result = subprocess.run([f"{type_filtre}", chemin_image, chemin_sortie, str(a), str(b)])
+            result = subprocess.run([f"../bin/{type_filtre}", chemin_image, chemin_sortie, str(a), str(b)])
     else:
         # Si une zone est sélectionnée, appliquer le filtre uniquement sur cette zone
         if type_filtre == "distorsion":
-            result = subprocess.run([f"{type_filtre}zone", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b),
-                            str(x_start), str(y_start), str(x_end), str(y_end)])
-        elif type_filtre == "fgsm":
-            result = subprocess.run([f"{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(x_start), str(y_start), str(x_end), str(y_end)])
+            result = subprocess.run([f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b),str(x_start), str(y_start), str(x_end), str(y_end)])
+        if type_filtre == "fgsm":
+            result = subprocess.run([f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, str(a),str(x_start), str(y_start), str(x_end), str(y_end)])
         else:
-            result = subprocess.run([f"{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(b),
-                            str(x_start), str(y_start), str(x_end), str(y_end)])
+            result = subprocess.run([f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(b),str(x_start), str(y_start), str(x_end), str(y_end)])
 
     # Vérification de l'exécution du subprocess
     if result.returncode != 0:
@@ -170,14 +175,20 @@ def appliquer_obscuration(type_filtre):
     # Charger l'image modifiée
     img_modifiee = Image.open(chemin_sortie)
     photo = ImageTk.PhotoImage(img_modifiee)
-
+    
+    chemin_image = chemin_sortie
     # Afficher l'image modifiée sur le canvas
     canvas.create_image(0, 0, anchor="nw", image=photo)
     canvas.image = photo
+    a = None
+    b = None
     x_start = None
     y_start = None
     x_end = None
     y_end = None
+    print(f"chemin_image : {chemin_image}, chemin_sortie :{chemin_sortie}\n, a: {a}, b: {b}, x_start: {x_start}, y_start: {y_start}, x_end: {x_end}, y_end: {y_end}")
+
+    
 
 # Fonction pour gérer la sélection de la zone
 def on_button_press(event):
