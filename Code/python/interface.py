@@ -102,16 +102,13 @@ def charger_modele():
 
 
 
-# Fonction pour charger l'image
 def charger_image():
-    
-
     global photo, img_original, rect_id, chemin_image  # Utiliser les variables globales
     chemin_image = None
     # Ouvrir une boîte de dialogue pour sélectionner un fichier image
     chemin_fichier = filedialog.askopenfilename(
         title="Choisir une image",
-        initialdir="../Data/Data/clear/",
+        initialdir="../Images",
         filetypes=[
             ("Images PNG", "*.png"),
             ("Images JPEG", "*.jpg;*.jpeg"),
@@ -131,13 +128,25 @@ def charger_image():
 
             img_original = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Sauvegarder l'image originale pour référence
             
+            # Obtenir les dimensions originales
+            hauteur_originale, largeur_originale = img_original.shape[:2]
+
+            # Vérifier si l'image dépasse les dimensions de 800x800
+            max_dim = 800
+            if largeur_originale > max_dim or hauteur_originale > max_dim:
+                # Calculer l'échelle de réduction
+                ratio = min(max_dim / largeur_originale, max_dim / hauteur_originale)
+                nouvelle_largeur = int(largeur_originale * ratio)
+                nouvelle_hauteur = int(hauteur_originale * ratio)
+                
+                # Redimensionner l'image
+                img_original = cv2.resize(img_original, (nouvelle_largeur, nouvelle_hauteur), interpolation=cv2.INTER_AREA)
+            
             # Convertir en Image PIL
             img_pil = Image.fromarray(img_original)
             
-            # Obtenir les dimensions originales
-            largeur, hauteur = img_pil.size
-            
             # Ajuster le canvas aux dimensions de l'image
+            largeur, hauteur = img_pil.size
             canvas.config(width=largeur, height=hauteur)
             
             # Convertir en image Tkinter
@@ -149,8 +158,7 @@ def charger_image():
         except Exception as e:
             print(f"Erreur lors du chargement de l'image : {e}")
     else:
-        messagebox.showerror("Erreur", f"Erreur lors du chargement de l'image : {e}")
-        charger_image()
+        messagebox.showerror("Erreur", "Aucune image sélectionnée.")
         
 def ouvrir_parametres_obscuration(type_filtre  , panel_obscuration):
     panel_obscuration.destroy()
