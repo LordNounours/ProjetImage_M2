@@ -50,7 +50,28 @@ def faire_prediction():
         # Faire une prédiction avec le modèle
         predictions = modele.predict(img)
         print(f"Prédictions : {predictions}")
-        messagebox.showinfo("Prédictions", f"Résultats de la prédiction : {predictions}")
+        predicted_class = np.argmax(predictions, axis=1)
+        predicted_probability = predictions[0][predicted_class[0]]
+
+        # Afficher le message en fonction de la classe prédite
+        if predicted_class[0] == 0:
+            messagebox.showinfo("Prédictions", f"Classe prédite : Clair {predicted_probability*100:.2f}%")
+        elif predicted_class[0] == 1:
+            messagebox.showinfo("Prédictions", f"Classe prédite : Distorsion {predicted_probability*100:.2f}%")
+        elif predicted_class[0] == 2:
+            messagebox.showinfo("Prédictions", f"Classe prédite : Flou Gaussien {predicted_probability*100:.2f}%")
+        elif predicted_class[0] == 3:
+            messagebox.showinfo("Prédictions", f"Classe prédite : Flou Mouvement {predicted_probability*100:.2f}%")
+        elif predicted_class[0] == 4:
+            messagebox.showinfo("Prédictions", f"Classe prédite : Pixelisation {predicted_probability*100:.2f}%")
+        else:
+            messagebox.showinfo("Prédictions", f"Classe prédite : FGSM {predicted_probability*100:.2f}%")
+    
+        print(f"Classe prédite : {predicted_class[0]} avec une probabilité de {predicted_probability*100:.2f}%")
+
+        
+        print(f"Classe prédite : {predicted_class[0]}") 
+        
     except Exception as e:
         print(f"Erreur lors de la prédiction : {e}")
         messagebox.showerror("Erreur", f"Erreur lors de la prédiction : {e}")
@@ -90,7 +111,7 @@ def charger_image():
     # Ouvrir une boîte de dialogue pour sélectionner un fichier image
     chemin_fichier = filedialog.askopenfilename(
         title="Choisir une image",
-        initialdir="../Images",
+        initialdir="../Data/Data/clear/",
         filetypes=[
             ("Images PNG", "*.png"),
             ("Images JPEG", "*.jpg;*.jpeg"),
