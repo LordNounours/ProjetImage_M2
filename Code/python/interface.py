@@ -52,21 +52,23 @@ def faire_prediction():
         print(f"Prédictions : {predictions}")
         predicted_class = np.argmax(predictions, axis=1)
         predicted_probability = predictions[0][predicted_class[0]]
+        if(predicted_class.size==2) :
+            if predicted_class[0] == 0:
+                messagebox.showinfo("Prédictions", f"Classe prédite : Clair {predicted_probability*100:.2f}%")
+            elif predicted_class[0] == 1:
+                messagebox.showinfo("Prédictions", f"Classe prédite : Obscurcie {predicted_probability*100:.2f}%")
+        else :
+            # Créer un dictionnaire pour les noms des classes
+            nom_classes = ["Clair", "Distorsion", "Flou Gaussien", "Flou Mouvement", "Pixelisation"]
+            
+            # Construire le message avec toutes les probabilités
+            message = "Probabilités des classes :\n"
+            for i, prob in enumerate(predictions[0]):
+                message += f"{nom_classes[i]} : {prob * 100:.2f}%\n"
 
-        # Afficher le message en fonction de la classe prédite
-        if predicted_class[0] == 0:
-            messagebox.showinfo("Prédictions", f"Classe prédite : Clair {predicted_probability*100:.2f}%")
-        elif predicted_class[0] == 1:
-            messagebox.showinfo("Prédictions", f"Classe prédite : Distorsion {predicted_probability*100:.2f}%")
-        elif predicted_class[0] == 2:
-            messagebox.showinfo("Prédictions", f"Classe prédite : Flou Gaussien {predicted_probability*100:.2f}%")
-        elif predicted_class[0] == 3:
-            messagebox.showinfo("Prédictions", f"Classe prédite : Flou Mouvement {predicted_probability*100:.2f}%")
-        elif predicted_class[0] == 4:
-            messagebox.showinfo("Prédictions", f"Classe prédite : Pixelisation {predicted_probability*100:.2f}%")
-        else:
-            messagebox.showinfo("Prédictions", f"Classe prédite : FGSM {predicted_probability*100:.2f}%")
-    
+            # Afficher le message
+            messagebox.showinfo("Prédictions", message)
+        
         print(f"Classe prédite : {predicted_class[0]} avec une probabilité de {predicted_probability*100:.2f}%")
 
         
@@ -223,15 +225,33 @@ def ouvrir_panel_obscuration():
     btn_mouvement = tk.Button(panel_obscuration, text="Flou de Mouvement", command=lambda: ouvrir_parametres_obscuration("floumouvement", panel_obscuration))
     btn_mouvement.pack(pady=5)
 
-    btn_fgsm = tk.Button(panel_obscuration, text="FGSM", command=lambda: ouvrir_parametres_obscuration("fgsm" , panel_obscuration))
-    btn_fgsm.pack(pady=5)
 
 # Créer un dossier "temp/" s'il n'existe pas
 def creer_dossier_temp():
     if not os.path.exists("./temp"):
         os.makedirs("./temp")
 
-# Appliquer un filtre en appelant un programme C++ et en sauvegardant l'image modifiée
+import cv2
+import numpy as np
+from tkinter import messagebox
+
+# Fonction pour calculer le PSNR entre deux images
+def calculer_psnr(image1, image2):
+    # Convertir les images en format RGB et s'assurer qu'elles ont la même taille
+    image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2RGB)
+    image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
+    
+    # Calculer l'erreur quadratique moyenne (MSE)
+    mse = np.mean((image1 - image2) ** 2)
+    if mse == 0:
+        return 100  # Si l'image est identique, le PSNR est infini (ou 100 pour la pratique)
+    
+    # Calculer le PSNR
+    max_pixel = 255.0
+    psnr = 20 * np.log10(max_pixel / np.sqrt(mse))
+    return psnr
+
+# Modifications dans la fonction appliquer_obscuration pour calculer et afficher le PSNR
 def appliquer_obscuration(type_filtre):
     global photo, img_original, x_start, y_start, x_end, y_end, chemin_image, a, b , result
 
@@ -242,7 +262,6 @@ def appliquer_obscuration(type_filtre):
     chemin_sortie = "./temp/image_modifiee.png"
     chemin_sortie2 = "./temp/image_modifiee2.png"
         
-        
     print(f"chemin_image : {chemin_image}, chemin_sortie :{chemin_sortie}\n, a: {a}, b: {b}, x_start: {x_start}, y_start: {y_start}, x_end: {x_end}, y_end: {y_end}\n")
     print(f"appilcation du fitre\n")
     
@@ -251,16 +270,12 @@ def appliquer_obscuration(type_filtre):
         # Si aucune sélection, appliquer le filtre sur toute l'image
         if type_filtre == "distorsion":
             result = subprocess.run([f"../bin/{type_filtre}", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b)])
-        if type_filtre == "fgsm":
-            result = subprocess.run([f"../bin/{type_filtre}", chemin_image, chemin_sortie, str(a)])
         else:
             result = subprocess.run([f"../bin/{type_filtre}", chemin_image, chemin_sortie, str(a), str(b)])
     else:
         # Si une zone est sélectionnée, appliquer le filtre uniquement sur cette zone
         if type_filtre == "distorsion":
             result = subprocess.run([f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, chemin_sortie2, str(a), str(b),str(x_start), str(y_start), str(x_end), str(y_end)])
-        if type_filtre == "fgsm":
-            result = subprocess.run([f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, str(a),str(x_start), str(y_start), str(x_end), str(y_end)])
         else:
             result = subprocess.run([f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(b),str(x_start), str(y_start), str(x_end), str(y_end)])
 
@@ -271,19 +286,26 @@ def appliquer_obscuration(type_filtre):
         print(f"Sortie : {result.stdout}")
 
     # Charger l'image modifiée
-    img_modifiee = Image.open(chemin_sortie)
-    photo = ImageTk.PhotoImage(img_modifiee)
-    
-    chemin_image = chemin_sortie
-    # Afficher l'image modifiée sur le canvas
+    img_modifiee = cv2.imread(chemin_sortie)
+
+    # Calculer le PSNR entre l'image originale et l'image modifiée
+    psnr = calculer_psnr(img_original, img_modifiee)
+    print(f"PSNR : {psnr:.2f} dB")
+
+    # Afficher le PSNR dans une boîte de message
+    messagebox.showinfo("PSNR", f"Le PSNR entre l'image originale et l'image modifiée est : {psnr:.2f} dB")
+
+    # Mettre à jour l'image affichée dans le canvas
+    photo = ImageTk.PhotoImage(Image.open(chemin_sortie))
     canvas.create_image(0, 0, anchor="nw", image=photo)
     canvas.image = photo
-    
-    
+
+    chemin_image = chemin_sortie
+
     if modele:
         faire_prediction()
     else:
-        messagebox.showwarning("Attention", "Aucune modèle de prediction est chargé.")
+        messagebox.showwarning("Attention", "Aucun modèle de prediction est chargé.")
     
     a = None
     b = None
@@ -292,7 +314,6 @@ def appliquer_obscuration(type_filtre):
     x_end = None
     y_end = None
     print(f"chemin_image : {chemin_image}, chemin_sortie :{chemin_sortie}\n, a: {a}, b: {b}, x_start: {x_start}, y_start: {y_start}, x_end: {x_end}, y_end: {y_end}")
-
     
 
 # Fonction pour gérer la sélection de la zone
