@@ -13,8 +13,8 @@ if gpus:
 
 
 train_base_dir = '../Data/Data/'
-dir = os.path.join(train_base_dir, 'mvt1')
-output_dir = os.path.join(train_base_dir, 'fgsmmvt1')
+dir = os.path.join(train_base_dir, 'distorsion1')
+output_dir = os.path.join(train_base_dir, 'fgsmdist1_')
 
 
 def verifier_et_lister_contenu(repertoire):
@@ -56,7 +56,7 @@ def create_tf_dataset(image_paths, labels, batch_size, shuffle_data=True):
     dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     return dataset
 
-model_path = os.path.join('../modeles', 'model_mvt1.keras')
+model_path = os.path.join('../modeles', 'model_dist1.keras')
 
 
 if os.path.isfile(model_path):
