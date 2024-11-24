@@ -14,3 +14,6 @@ pixel 3 : t 400
 pixel mut 1 : t 4
 pixel mut 2 : t 64
 pixel mut 3 : t 400
+fgsm 1 : 1
+fgsm 2 : 50
+fgsm 3 : 500

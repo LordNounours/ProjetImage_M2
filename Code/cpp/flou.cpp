@@ -61,12 +61,12 @@ int main(int argc, char* argv[])
     char cNomImgLue[250],cNomImgOut[250];
     int nH, nW, nTaille,k;
     float sigma;
-  
+    
     if (argc != 5) 
-        {
+    {
         printf("Usage: ImageIn.png  ImgOut.png k \n"); 
         exit (1) ;
-        }
+    }
 
     sscanf (argv[1],"%s",cNomImgLue) ;
     sscanf (argv[2],"%s",cNomImgOut);
@@ -91,5 +91,5 @@ int main(int argc, char* argv[])
     }
     stbi_image_free(ImgIn);
     free(ImgOut);
-    return 1;
+    return 0;
 }
