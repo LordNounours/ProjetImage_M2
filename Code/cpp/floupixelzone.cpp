@@ -77,9 +77,9 @@ void floupixelzone(unsigned char *ImgIn , unsigned char *ImgOut, int nH , int nW
                     }
                 }
                 if (mode == 0){//AVG
-                    colpixelR /= taillePixel;
-                    colpixelV /= taillePixel;
-                    colpixelB /= taillePixel;
+                    colpixelR /= pas*pas;
+                    colpixelV /= pas*pas;
+                    colpixelB /= pas*pas;
                 }
                 
                 for (int k = i ; k < i + pas ; k++)
@@ -162,5 +162,5 @@ int main(int argc, char* argv[])
     }
     stbi_image_free(ImgIn);
     free(ImgOut);
-    return 1;
+    return 0;
 }

@@ -29,7 +29,7 @@ void floupixel(unsigned char *ImgIn , unsigned char *ImgOut, int nH , int nW , i
             int colpixelB = 0;
             int Y = 0;
             if (mode == 1)//MIN
-                    Y = std::numeric_limits<int>::max();
+                Y = std::numeric_limits<int>::max();
             
             for (int k = i ; k < i + pas ; k++)
             {
@@ -46,20 +46,21 @@ void floupixel(unsigned char *ImgIn , unsigned char *ImgOut, int nH , int nW , i
                         colpixelB += ImgIn[indiceB];
                     }
                     if (mode == 1){//MIN
-//                     if (colpixelR > ImgIn[indiceR]) colpixelR = ImgIn[indiceR];
-//                     if (colpixelV > ImgIn[indiceV]) colpixelV = ImgIn[indiceV];   composantes séparées
-//                     if (colpixelB > ImgIn[indiceB]) colpixelB = ImgIn[indiceB];
+                        //                             if (colpixelR > ImgIn[indiceR]) colpixelR = ImgIn[indiceR];
+                        //                             if (colpixelV > ImgIn[indiceV]) colpixelV = ImgIn[indiceV];   composantes séparées
+                        //                             if (colpixelB > ImgIn[indiceB]) colpixelB = ImgIn[indiceB];
                         if (Y > luminance(ImgIn[indiceR] , ImgIn[indiceV] , ImgIn[indiceB]))
                         {
+                            
                             colpixelR = ImgIn[indiceR];
                             colpixelV = ImgIn[indiceV];
                             colpixelB = ImgIn[indiceB];
                         }
                     }
                     if (mode == 2){//MAX
-//                      if (colpixelR < ImgIn[indiceR]) colpixelR = ImgIn[indiceR];
-//                      if (colpixelV < ImgIn[indiceV]) colpixelV = ImgIn[indiceV];   composantes séparées
-//                      if (colpixelB < ImgIn[indiceB]) colpixelB = ImgIn[indiceB];
+                        //                             if (colpixelR < ImgIn[indiceR]) colpixelR = ImgIn[indiceR];
+                        //                             if (colpixelV < ImgIn[indiceV]) colpixelV = ImgIn[indiceV];   composantes séparées
+                        //                             if (colpixelB < ImgIn[indiceB]) colpixelB = ImgIn[indiceB];
                         if (Y < luminance(ImgIn[indiceR] , ImgIn[indiceV] , ImgIn[indiceB]))
                         {
                             colpixelR = ImgIn[indiceR];
@@ -67,53 +68,55 @@ void floupixel(unsigned char *ImgIn , unsigned char *ImgOut, int nH , int nW , i
                             colpixelB = ImgIn[indiceB];
                         }
                         
-                    }
-                } 
-                if (mode == 0){//AVG
-                    colpixelR /= taillePixel;
-                    colpixelV /= taillePixel;
-                    colpixelB /= taillePixel;
-                }
-                for (int k = i ; k < i + pas ; k++)
-                {
-                    for (int l = j ; l < j + pas*3 ; l+=3)
-                    {
                         
-                        int indiceR =  min(nH * nW *3 ,k * nW * 3 + l);
-                        int indiceV =  min(nH * nW *3 ,k * nW * 3 + l + 1);
-                        int indiceB =  min(nH * nW *3 ,k * nW * 3 + l + 2);
+                    }
                     
-                        ImgOut[indiceR] = colpixelR;
-                        ImgOut[indiceV] = colpixelV;
-                        ImgOut[indiceB] = colpixelB;
-
+                }
+            }
+            if (mode == 0){//AVG
+                colpixelR /= pas*pas;
+                colpixelV /= pas*pas;
+                colpixelB /= pas*pas;
+            }
+            
+            for (int k = i ; k < i + pas ; k++)
+            {
+                for (int l = j ; l < j + pas*3 ; l+=3)
+                {
+                    
+                    int indiceR =  min(nH * nW *3 ,k * nW * 3 + l);
+                    int indiceV =  min(nH * nW *3 ,k * nW * 3 + l + 1);
+                    int indiceB =  min(nH * nW *3 ,k * nW * 3 + l + 2);
+                    
+                    
+                    ImgOut[indiceR] = colpixelR;
+                    ImgOut[indiceV] = colpixelV;
+                    ImgOut[indiceB] = colpixelB;
+                    
                 }
             }
         }
-        
     }
     
     
-    
 }
-
 
 int main(int argc, char* argv[])
 {
     char cNomImgLue[250],cNomImgOut[250];
     int nH, nW, nTaille,taillePixel,mode;
-  
+    
     if (argc != 5) 
-        {
+    {
         printf("Usage: ImageIn.png  ImgOut.png tailledespixels mode(int[0,2]) \n"); 
         exit (1) ;
-        }
-
+    }
+    
     sscanf (argv[1],"%s",cNomImgLue) ;
     sscanf (argv[2],"%s",cNomImgOut);
     sscanf (argv[3],"%d",&taillePixel); //2^n
     sscanf (argv[4],"%d",&mode); //2^n
-
+    
     unsigned char *ImgIn, *ImgOut;
     int channels;
     ImgIn = stbi_load(cNomImgLue, &nW, &nH, &channels, STBI_rgb);
@@ -131,5 +134,5 @@ int main(int argc, char* argv[])
     }
     stbi_image_free(ImgIn);
     free(ImgOut);
-    return 1;
+    return 0;
 }
