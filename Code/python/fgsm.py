@@ -14,7 +14,7 @@ if gpus:
 
 train_base_dir = '../Data/Data/'
 dir = os.path.join(train_base_dir, 'distorsion1')
-output_dir = os.path.join(train_base_dir, 'fgsmdist1_')
+output_dir = os.path.join(train_base_dir, 'fgsmmeth2')
 
 
 def verifier_et_lister_contenu(repertoire):
