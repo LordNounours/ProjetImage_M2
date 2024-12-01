@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 import tensorflow as tf
 import numpy as np
 import cv2
+import applyfgsm
 
 # Variables globales
 x_start, y_start = None, None
@@ -24,7 +25,7 @@ def creer_dossier_temp():
     return "./temp"
 
 
-def faire_prediction():
+def faire_prediction(chemin_last_filter):
     global modele, chemin_image
 
     if modele is None:
@@ -32,7 +33,7 @@ def faire_prediction():
         messagebox.showwarning("Attention", "Aucun modèle chargé. Veuillez charger un modèle avant de faire une prédiction.")
         return
     
-    if chemin_image is None:
+    if chemin_last_filter is None:
         print("Aucune image disponible pour la prédiction.")
         messagebox.showwarning("Attention", "Aucune image disponible pour la prédiction.")
         return
@@ -55,7 +56,8 @@ def faire_prediction():
         print(f"Prédictions : {predictions}")
         predicted_class = np.argmax(predictions, axis=1)
         predicted_probability = predictions[0][predicted_class[0]]
-        if(predicted_class.size==2) :
+        print(predicted_class.size)
+        if(predicted_class.size==1) :
             if predicted_class[0] == 0:
                 messagebox.showinfo("Prédictions", f"Classe prédite : Clair {predicted_probability*100:.2f}%")
             elif predicted_class[0] == 1:
@@ -90,7 +92,7 @@ def charger_modele():
         chemin_modele = filedialog.askopenfilename(
             title="Choisir un modèle",
             initialdir="../modeles",
-            filetypes=[("Fichiers Keras", "*.keras"), ("Tous les fichiers", "*.*")]
+            filetypes=[("Tous les fichiers", "*.*")]
         )
         if chemin_modele:
             modele = tf.keras.models.load_model(chemin_modele)
@@ -108,12 +110,7 @@ def charger_image():
     chemin_fichier = filedialog.askopenfilename(
         title="Choisir une image",
         initialdir="../Images",
-        filetypes=[
-            ("Images PNG", "*.png"),
-            ("Images JPEG", "*.jpg;*.jpeg"),
-            ("Images BMP", "*.bmp"),
-            ("Images GIF", "*.gif"),
-            ("Tous les fichiers", "*.*")]
+        filetypes=[("Tous les fichiers", "*.*")]
     )
     if chemin_fichier:
         try:
@@ -165,78 +162,118 @@ def calculer_psnr(image1, image2):
         return 100
     return 20 * np.log10(255.0 / np.sqrt(mse))
 
-# Appliquer un filtre
-def appliquer_obscuration(type_filtre):
-    global chemin_image, img_original, photo, x_start, y_start, x_end, y_end, a, b
-
-    chemin_temp = creer_dossier_temp()
-    chemin_sortie = os.path.join(chemin_temp, "image_modifiee.png")
-    chemin_sortie2 = os.path.join(chemin_temp, "image_modifiee2.png")
-
-    if None in [x_start, x_end, y_start, y_end]:
-        args = [f"../bin/{type_filtre}", chemin_image, chemin_sortie, str(a), str(b)]
-
-    else:
-        args = [f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(b), str(x_start), str(y_start), str(x_end), str(y_end)]
-
-    result = subprocess.run(args)
-    if result.returncode != 0:
-        messagebox.showerror("Erreur", f"Erreur lors de l'application du filtre {type_filtre}")
-        return
-
-    img_modifiee = cv2.imread(chemin_sortie)
-    psnr = calculer_psnr(cv2.cvtColor(img_original, cv2.COLOR_RGB2BGR), img_modifiee)
-    messagebox.showinfo("PSNR", f"PSNR : {psnr:.2f} dB")
-    chemin_image = chemin_sortie
-
+def affiche_last_image_on_canvas(path_last_image):
+    global chemin_image , photo
+    img_modifiee = cv2.imread(path_last_image)
+    chemin_image = path_last_image
     img_modifiee = cv2.cvtColor(img_modifiee, cv2.COLOR_BGR2RGB)
     img_pil = Image.fromarray(img_modifiee)
     photo = ImageTk.PhotoImage(img_pil)
     canvas.create_image(0, 0, anchor="nw", image=photo)
+    return img_modifiee
+    
+# Appliquer un filtre
+def appliquer_obscuration(type_filtre):
+    global chemin_image, img_original, x_start, y_start, x_end, y_end, a, b
+
+    chemin_temp = creer_dossier_temp()
+    chemin_sortie = os.path.join(chemin_temp, "image_modifiee.png")
+    chemin_sortie2 = os.path.join(chemin_temp, "image_modifiee2.png")
+    
+    if chemin_image is None:
+        #print("Aucune image n'est chargée. Veuillez charger une image avant d'appliquer une obscuration.")
+        messagebox.showwarning("Attention", "Aucune image n'est chargée. Veuillez charger une image avant d'appliquer une obscuration.")
+        return
+    
+    if None in [x_start, x_end, y_start, y_end]:
+        args = [f"../bin/{type_filtre}", chemin_image, chemin_sortie, str(a), str(b)]
+        
+    else:
+        args = [f"../bin/{type_filtre}zone", chemin_image, chemin_sortie, str(a), str(b), str(x_start), str(y_start), str(x_end), str(y_end)]
+            
+    result = subprocess.run(args)
+    if result.returncode != 0:
+        messagebox.showerror("Erreur", f"Erreur lors de l'application du filtre {type_filtre}")
+        return
+    
+    
+    img_modifiee = affiche_last_image_on_canvas(chemin_sortie)
+    
+    psnr = calculer_psnr(cv2.cvtColor(img_original, cv2.COLOR_RGB2BGR), img_modifiee)
+    messagebox.showinfo("PSNR", f"PSNR : {psnr:.2f} dB")
+    
+    faire_prediction(chemin_sortie)
     
     x_start, y_start = None, None
     x_end, y_end = None, None   
     rect_id = None
     a, b = None, None
     
-    
 
+    
 # Fenêtre des paramètres
-def ouvrir_parametres(type_filtre):
+def ouvrir_parametres(type_filtre , panel):
+    
     fenetre_param = Toplevel(fenetre)
     fenetre_param.title(f"Paramètres : {type_filtre}")
+    
+    if type_filtre not in [None , "fgsm"] :
+        tk.Label(fenetre_param, text="Valeur de a:").pack(pady=5)
+        entry_a = tk.Entry(fenetre_param)
+        entry_a.pack(pady=5)
 
-    tk.Label(fenetre_param, text="Valeur de a:").pack(pady=5)
-    entry_a = tk.Entry(fenetre_param)
-    entry_a.pack(pady=5)
-
-    tk.Label(fenetre_param, text="Valeur de b:").pack(pady=5)
-    entry_b = tk.Entry(fenetre_param)
-    entry_b.pack(pady=5)
-
-    def appliquer():
-        global a, b
-        try:
-            a, b = int(entry_a.get()), int(entry_b.get())
+        tk.Label(fenetre_param, text="Valeur de b:").pack(pady=5)
+        entry_b = tk.Entry(fenetre_param)
+        entry_b.pack(pady=5)
+        
+        def appliquer():
+            global a, b
+            try:
+                a, b = int(entry_a.get()), int(entry_b.get())
+                fenetre_param.destroy()
+                panel.destroy()
+                appliquer_obscuration(type_filtre)
+                
+            except ValueError:
+                messagebox.showerror("Erreur", "Veuillez entrer des valeurs valides pour a et b.")
+        
+    elif type_filtre == "fgsm":
+        tk.Label(fenetre_param, text="Valeur du sigma:").pack(pady=5)
+        entry_a = tk.Entry(fenetre_param)
+        entry_a.pack(pady=5)
+        def appliquer():
+            global a
+            try:
+                a = float(entry_a.get())
+                fenetre_param.destroy()
+                panel.destroy()
+                applyfgsm.execute(modele , chemin_image , "./temp/adversarial_image.png", a)
+                affiche_last_image_on_canvas("./temp/adversarial_image.png") 
+                faire_prediction("./temp/adversarial_image.png")
+            except ValueError:
+                messagebox.showerror("Erreur", "Veuillez entrer des valeurs valides pour sigma")
+    else:
+        def appliquer():
             fenetre_param.destroy()
-            appliquer_obscuration(type_filtre)
+            panel.destroy()
             faire_prediction()
-        except ValueError:
-            messagebox.showerror("Erreur", "Veuillez entrer des valeurs valides pour a et b.")
-
+            
+        
     tk.Button(fenetre_param, text="Appliquer", command=appliquer).pack(pady=10)
-    fenetre_param.geometry("250x150")
+    fenetre_param.geometry("250x200")
+    
+        
 
 # Fenêtre des filtres
 def ouvrir_panel_obscuration():
     panel = Toplevel(fenetre)
     panel.title("Filtres d'obscuration")
 
-    filtres = [("Pixelisation", "floupixel"), ("Distorsion", "distorsion"),
-               ("Flou Gaussien", "flougaussien"), ("Flou Mouvement", "floumouvement")]
+    filtres = [("Aucun" , None), ("Pixelisation", "floupixel"), ("Distorsion", "distorsion"),
+               ("Flou Gaussien", "flougaussien"), ("Flou Mouvement", "floumouvement") , ("FGSM", "fgsm")]
     for nom, filtre in filtres:
-        tk.Button(panel, text=nom, command=lambda f=filtre: ouvrir_parametres(f)).pack(pady=5)
-    panel.geometry("200x200")
+        tk.Button(panel, text=nom, command=lambda f=filtre: ouvrir_parametres(f , panel)).pack(pady=5)
+    panel.geometry("200x300")
 
 # Interface principale
 fenetre = tk.Tk()
