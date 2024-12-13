@@ -57,12 +57,12 @@ def faire_prediction(chemin_last_filter):
         predicted_class = np.argmax(predictions, axis=1)
         predicted_probability = predictions[0][predicted_class[0]]
         print(predicted_class.size)
-        if(predicted_class.size==1) :
+        if(predictions.size <= 2) :
             if predicted_class[0] == 0:
                 messagebox.showinfo("Prédictions", f"Classe prédite : Clair {predicted_probability*100:.2f}%")
             elif predicted_class[0] == 1:
                 messagebox.showinfo("Prédictions", f"Classe prédite : Obscurcie {predicted_probability*100:.2f}%")
-        else :
+        else:
             # Créer un dictionnaire pour les noms des classes
             nom_classes = ["Clair", "Distorsion", "Flou Gaussien", "Flou Mouvement", "Pixelisation"]
             
